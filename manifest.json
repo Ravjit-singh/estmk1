@@ -1,6 +1,6 @@
 {
-  "name": "R Music",
-  "short_name": "R Music",
+  "name": "File Reducer",
+  "short_name": "File Reducer",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
