@@ -1,0 +1,751 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Essential Tools — Oxygen OS Theme</title>
+
+  <!-- Poppins Font -->
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+  <!-- Font Awesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+  <!-- Libraries (loaded once globally) -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
+  <style>
+    /* ===== Oxygen OS Theme (shared across tools) ===== */
+    :root{
+      --bg:#0a0a0a; --card:#161616; --muted:#b0b0b0; --text:#f5f5f5; --accent:#ff2d55; --danger:#ff453a; --radius:14px;
+    }
+    *{box-sizing:border-box; -webkit-tap-highlight-color:transparent}
+    body{
+      margin:0; font-family:'Poppins',sans-serif; background:var(--bg); color:var(--text); min-height:100dvh; display:flex; flex-direction:column;
+    }
+    a{color:inherit}
+    .container{width:100%; max-width:960px; margin:0 auto; padding:16px; flex:1; display:flex; flex-direction:column}
+    header.site{
+      background:#111; border-bottom:1px solid rgba(255,255,255,0.08); padding:14px 16px; display:flex; align-items:center; justify-content:space-between; gap:10px; position:sticky; top:0; z-index:10;
+    }
+    .brand{display:flex; align-items:center; gap:10px; font-weight:600; color:var(--accent)}
+    .brand i{font-size:18px}
+    .back-btn{
+      display:none; border:1px solid rgba(255,255,255,0.15); background:transparent; color:var(--text); border-radius:10px; padding:8px 12px; font-weight:600; cursor:pointer;
+    }
+    .back-btn:active{opacity:0.8}
+
+    /* Home grid */
+    #home{display:block}
+    .grid{
+      display:grid; grid-template-columns:repeat(auto-fit, minmax(240px,1fr)); gap:16px; margin-top:16px;
+    }
+    .card{
+      background:var(--card); border-radius:var(--radius); padding:18px; border:1px solid rgba(255,255,255,0.05);
+      box-shadow:0 4px 12px rgba(0,0,0,0.4); display:flex; flex-direction:column; gap:10px; transition:transform .2s ease;
+    }
+    .card:hover{transform:translateY(-4px)}
+    .card i{font-size:28px; color:var(--accent)}
+    .card h3{margin:0; font-size:16px}
+    .muted{color:var(--muted); font-size:13px}
+    .btn{
+      border:none; padding:10px 12px; border-radius:10px; font-weight:600; font-size:14px; cursor:pointer; transition:.2s;
+      display:inline-flex; align-items:center; justify-content:center; gap:6px; text-decoration:none;
+    }
+    .btn.primary{background:var(--accent); color:#fff}
+    .btn.primary:active{background:#e02145}
+    .btn.ghost{background:transparent; border:1px solid rgba(255,255,255,0.2); color:var(--muted)}
+    footer.site{
+      padding:14px; font-size:12px; color:var(--muted); text-align:center; border-top:1px solid rgba(255,255,255,0.08); margin-top:auto;
+    }
+    /* Tool section wrapper */
+    section.tool{display:none; max-width:720px; width:100%; margin:16px auto 0; }
+    section.tool .tool-head{
+      display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:12px;
+    }
+    section.tool .tool-title{
+      display:flex; align-items:center; gap:10px; font-size:18px; font-weight:600; color:var(--accent);
+    }
+
+    /* Reusable sub-card, rows, dropzones, controls, previews */
+    .subcard{background:#1c1c1c; border-radius:var(--radius); padding:14px; border:1px solid rgba(255,255,255,0.05); margin-bottom:12px;}
+    .subcard h4{margin:0 0 10px; font-size:14px; color:var(--muted); font-weight:600}
+    .row{display:flex; flex-direction:column; gap:8px}
+    .hint{color:var(--muted); font-size:12px; margin-top:6px}
+    .controls{display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:10px}
+    .controls label{display:flex; flex-direction:column; gap:4px; font-size:12px; color:var(--muted)}
+    .controls input, .controls select, .controls input[type="color"]{
+      background:#111; border:1px solid rgba(255,255,255,0.1); border-radius:8px; padding:6px 8px; color:var(--text); font-size:14px;
+    }
+    .dropzone{
+      border:2px dashed rgba(255,255,255,0.2); border-radius:var(--radius); padding:20px; text-align:center; cursor:pointer; min-height:120px;
+      display:flex; align-items:center; justify-content:center; transition:.2s;
+    }
+    .dropzone.dragover{border-color:var(--accent); background:rgba(255,45,85,0.10)}
+    .dropzone input{display:none}
+    .row-actions{display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:10px}
+
+    .progress{height:6px; border-radius:999px; background:#111; margin-top:6px; overflow:hidden; display:none}
+    .progress > div{height:100%; width:0%; background:var(--accent); transition:width .15s ease}
+
+    .preview-grid{display:grid; grid-template-columns:1fr 1fr; gap:10px}
+    .preview-flex{display:flex; justify-content:center; align-items:center}
+    .thumb{
+      background:#111; border-radius:10px; display:flex; align-items:center; justify-content:center; overflow:hidden;
+      aspect-ratio:1/1;
+    }
+    .thumb img, .thumb canvas{max-width:100%; max-height:100%}
+    .meta{font-size:12px; color:var(--muted); margin-top:4px}
+    .good{color:#2ecc71}
+    .bad{color:var(--danger)}
+
+    /* Mobile tweaks */
+    @media (max-width:560px){
+      .preview-grid{grid-template-columns:1fr 1fr}
+      .thumb{max-height:140px}
+    }
+  </style>
+</head>
+<body>
+  <header class="site">
+    <div class="brand"><i class="fas fa-bolt"></i> Essential Tools</div>
+    <button id="backHome" class="back-btn"><i class="fas fa-arrow-left"></i> Home</button>
+  </header>
+
+  <div class="container">
+    <!-- ========= HOME ========= -->
+    <section id="home">
+      <div class="grid">
+        <div class="card">
+          <i class="fas fa-file-pdf"></i>
+          <h3>PDF Compressor</h3>
+          <div class="muted">Compress multi-page PDFs to a net target size.</div>
+          <button class="btn primary" data-open="pdf"><i class="fas fa-arrow-right"></i> Open</button>
+        </div>
+        <div class="card">
+          <i class="fas fa-compress-alt"></i>
+          <h3>Image Compressor</h3>
+          <div class="muted">Target size (KB), format, max dimensions — in your browser.</div>
+          <button class="btn primary" data-open="img"><i class="fas fa-arrow-right"></i> Open</button>
+        </div>
+        <div class="card">
+          <i class="fas fa-qrcode"></i>
+          <h3>QR Code Generator</h3>
+          <div class="muted">Create crisp QR codes with ECC, quiet zone, and shapes.</div>
+          <button class="btn primary" data-open="qr"><i class="fas fa-arrow-right"></i> Open</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========= PDF COMPRESSOR ========= -->
+    <section id="pdf" class="tool" aria-hidden="true">
+      <div class="tool-head">
+        <div class="tool-title"><i class="fas fa-file-pdf"></i> PDF Compressor</div>
+        <button class="btn ghost" data-open="home"><i class="fas fa-house"></i> Home</button>
+      </div>
+
+      <div class="subcard">
+        <h4>1) Pick a PDF</h4>
+        <label class="dropzone" id="pdf-dropzone">
+          <input type="file" id="pdf-file" accept="application/pdf" />
+          <div>
+            <div style="font-weight:600;">Tap or drag a PDF</div>
+            <div class="hint">PDF · multi-page supported</div>
+          </div>
+        </label>
+
+        <div class="controls">
+          <label>Net Target Size (MB)
+            <input type="number" id="pdf-netTargetMB" min="0.1" step="0.1" value="1" />
+          </label>
+          <div></div>
+        </div>
+
+        <div class="row-actions">
+          <button class="btn primary" id="pdf-btnCompress" disabled><i class="fas fa-cogs"></i> Compress</button>
+          <button class="btn ghost" id="pdf-btnReset" disabled><i class="fas fa-undo"></i> Reset</button>
+        </div>
+        <a class="btn primary" id="pdf-downloadLink" download style="display:none"><i class="fas fa-download"></i> Download</a>
+
+        <div class="hint" id="pdf-status">No PDF selected.</div>
+        <div class="progress" id="pdf-progress"><div></div></div>
+      </div>
+
+      <div class="subcard">
+        <h4>2) Preview</h4>
+        <div class="preview-grid">
+          <div>
+            <div class="thumb"><img id="pdf-origImg" alt="orig preview"></div>
+            <div class="meta" id="pdf-origMeta">—</div>
+          </div>
+          <div>
+            <div class="thumb"><img id="pdf-outImg" alt="out preview"></div>
+            <div class="meta" id="pdf-outMeta">—</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========= IMAGE COMPRESSOR ========= -->
+    <section id="img" class="tool" aria-hidden="true">
+      <div class="tool-head">
+        <div class="tool-title"><i class="fas fa-compress-alt"></i> Image Compressor</div>
+        <button class="btn ghost" data-open="home"><i class="fas fa-house"></i> Home</button>
+      </div>
+
+      <div class="subcard">
+        <h4>1) Pick an image</h4>
+        <label class="dropzone" id="img-dropzone">
+          <input type="file" id="img-file" accept="image/*" />
+          <div>
+            <div style="font-weight:600;">Tap or drag an image</div>
+            <div class="hint">JPEG · PNG · WEBP · HEIC</div>
+          </div>
+        </label>
+        <div class="controls">
+          <label>Target size (KB)<input type="number" id="img-targetKB" min="20" step="5" value="100" /></label>
+          <label>Format
+            <select id="img-format">
+              <option value="image/webp">WEBP</option>
+              <option value="image/jpeg">JPEG</option>
+              <option value="image/png">PNG</option>
+            </select>
+          </label>
+          <label>Max width<input type="number" id="img-maxW" value="2048" /></label>
+          <label>Max height<input type="number" id="img-maxH" value="2048" /></label>
+        </div>
+        <div class="row-actions">
+          <button class="btn primary" id="img-btnCompress" disabled><i class="fas fa-cogs"></i> Compress</button>
+          <button class="btn ghost" id="img-btnReset" disabled><i class="fas fa-undo"></i> Reset</button>
+        </div>
+        <a class="btn primary" id="img-downloadLink" download style="display:none"><i class="fas fa-download"></i> Download</a>
+        <div class="hint" id="img-status">No image selected.</div>
+        <div class="progress" id="img-progress"><div></div></div>
+      </div>
+
+      <div class="subcard">
+        <h4>2) Preview</h4>
+        <div class="preview-grid">
+          <div>
+            <div class="thumb"><img id="img-origImg"></div>
+            <div class="meta" id="img-origMeta">—</div>
+          </div>
+          <div>
+            <div class="thumb"><img id="img-outImg"></div>
+            <div class="meta" id="img-outMeta">—</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========= QR CODE GENERATOR ========= -->
+    <section id="qr" class="tool" aria-hidden="true">
+      <div class="tool-head">
+        <div class="tool-title"><i class="fas fa-qrcode"></i> QR Code Generator</div>
+        <button class="btn ghost" data-open="home"><i class="fas fa-house"></i> Home</button>
+      </div>
+
+      <div class="subcard">
+        <h4>Enter text or URL</h4>
+        <div class="row">
+          <div style="display:grid; grid-template-columns:1fr auto; gap:8px;">
+            <textarea id="qr-text" placeholder="Type text or paste a URL…" style="width:100%; background:#111; border:1px solid rgba(255,255,255,0.1); border-radius:10px; padding:10px 12px; color:var(--text); font-size:14px; min-height:44px; max-height:140px; resize:vertical;">https://example.com</textarea>
+            <button class="btn ghost" id="qr-btnClear" title="Clear"><i class="fas fa-xmark"></i></button>
+          </div>
+
+          <div class="controls">
+            <label>Size (px)<input type="number" id="qr-size" min="64" step="16" value="512"></label>
+            <label>Error correction
+              <select id="qr-ecc">
+                <option value="L">L (7%)</option>
+                <option value="M" selected>M (15%)</option>
+                <option value="Q">Q (25%)</option>
+                <option value="H">H (30%)</option>
+              </select>
+            </label>
+            <label>Quiet zone (px)<input type="number" id="qr-quiet" min="0" step="2" value="16"></label>
+            <label>Module shape
+              <select id="qr-shape">
+                <option value="square" selected>Square</option>
+                <option value="round">Round</option>
+              </select>
+            </label>
+            <label>Foreground<input type="color" id="qr-fg" value="#ffffff"></label>
+            <label>Background<input type="color" id="qr-bg" value="#0a0a0a"></label>
+          </div>
+
+          <div class="row-actions">
+            <button class="btn primary" id="qr-btnGenerate"><i class="fas fa-bolt"></i> Generate</button>
+            <a class="btn primary" id="qr-btnDownload" download="qr.png" style="display:none"><i class="fas fa-download"></i> Download</a>
+          </div>
+          <div class="hint" id="qr-status">Ready.</div>
+          <div class="progress" id="qr-progress"><div></div></div>
+        </div>
+      </div>
+
+      <div class="subcard">
+        <h4>Preview</h4>
+        <div class="preview-flex">
+          <div>
+            <div class="thumb" style="width:min(350px, 80vw);"><canvas id="qr-canvas" width="512" height="512"></canvas></div>
+            <div class="meta" id="qr-meta">—</div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <footer class="site">
+    <i class="fas fa-bolt"></i> Created by ·
+    <a href="https://ravjitsingh.blogspot.com" target="_blank" style="color: var(--accent); text-decoration: none;">Ravjit Singh</a>
+  </footer>
+
+  <script>
+    /* ===== Simple SPA Navigation ===== */
+    const sections = ["home","pdf","img","qr"];
+    const backBtn = document.getElementById('backHome');
+    function show(id){
+      sections.forEach(s=>{
+        const el = document.getElementById(s);
+        const isTarget = (s===id);
+        el.style.display = isTarget ? (s==="home"?"block":"block") : "none";
+        el.setAttribute("aria-hidden", String(!isTarget));
+      });
+      backBtn.style.display = id==="home" ? "none" : "inline-flex";
+      if(location.hash.replace('#','')!==id){ history.replaceState(null,"","#"+id); }
+      // on switch, reset progress bars in inactive tools (visual)
+      document.querySelectorAll('.progress').forEach(p=>{ if(p.closest('#'+id)) return; p.style.display='none'; const bar=p.querySelector('div'); if(bar) bar.style.width='0%'; });
+    }
+    document.querySelectorAll('[data-open]').forEach(btn=>{
+      btn.addEventListener('click',()=>show(btn.dataset.open));
+    });
+    backBtn.addEventListener('click',()=>show('home'));
+    window.addEventListener('load', ()=>{
+      const target = location.hash ? location.hash.replace('#','') : 'home';
+      show(sections.includes(target)?target:'home');
+    });
+
+    /* ******************************************************************
+       ===============  PDF COMPRESSOR (namespaced)  ====================
+       ******************************************************************/
+    (function(){
+      const pdfjsLib = window['pdfjs-dist/build/pdf'];
+      pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js";
+      const { jsPDF } = window.jspdf;
+
+      const $ = (s)=>document.querySelector(s);
+      const fileInput = $('#pdf-file'),
+            dropzone  = $('#pdf-dropzone'),
+            btnCompress = $('#pdf-btnCompress'),
+            btnReset = $('#pdf-btnReset'),
+            downloadLink = $('#pdf-downloadLink'),
+            statusEl = $('#pdf-status'),
+            progress = $('#pdf-progress'),
+            progressBar = $('#pdf-progress>div'),
+            netTargetMB = $('#pdf-netTargetMB'),
+            origImg = $('#pdf-origImg'),
+            outImg  = $('#pdf-outImg'),
+            origMeta = $('#pdf-origMeta'),
+            outMeta  = $('#pdf-outMeta');
+
+      let pdfData = null, originalFile = null, outPreviewURL = null;
+
+      function setStatus(m){ statusEl.textContent = m; }
+      function setProgress(r){ progress.style.display='block'; progressBar.style.width = Math.max(0, Math.min(100, r*100)) + '%'; }
+      function clearProgress(){ progress.style.display='none'; progressBar.style.width = '0%'; }
+      function bytesToKB(b){ return (b/1024).toFixed(1); }
+      function getTargetBytes(){ return Math.max(0.0001, Number(netTargetMB.value)) * 1024 * 1024; }
+      function releaseURL(u){ if(u) URL.revokeObjectURL(u); }
+      function blobToDataURL(blob){ return new Promise(res => { const r = new FileReader(); r.onload = () => res(r.result); r.readAsDataURL(blob); }); }
+      function canvasToBlob(c, type='image/jpeg', quality=0.8){ return new Promise(res=> c.toBlob(res, type, quality)); }
+
+      function setOrigPreviewFromCanvas(canvas, file){
+        const dataUrl = canvas.toDataURL('image/png');
+        origImg.src = dataUrl;
+        const pagesText = file._pdfPageCount ? `${file._pdfPageCount} pages` : '';
+        origMeta.innerHTML = `<b>${file.name}</b><br/>${canvas.width}×${canvas.height}<br/>${bytesToKB(file.size)} KB ${pagesText ? ' · '+pagesText : ''}`;
+      }
+      function setOutPreviewFromBlob(blob, canvas, fileName){
+        releaseURL(outPreviewURL);
+        const url = URL.createObjectURL(blob);
+        outPreviewURL = url;
+        outImg.src = url;
+        const sizeKB = bytesToKB(blob.size);
+        outMeta.innerHTML = `<b>${fileName}</b><br/>${canvas.width}×${canvas.height}<br/><span class="${blob.size <= getTargetBytes() ? 'good' : 'bad'}">${sizeKB} KB</span>`;
+        downloadLink.style.display='inline-flex';
+        downloadLink.href = url;
+        downloadLink.download = fileName;
+      }
+
+      dropzone.addEventListener('dragover', e => { e.preventDefault(); dropzone.classList.add('dragover'); });
+      dropzone.addEventListener('dragleave', () => dropzone.classList.remove('dragover'));
+      dropzone.addEventListener('drop', e => { e.preventDefault(); dropzone.classList.remove('dragover'); const f = e.dataTransfer.files && e.dataTransfer.files[0]; if(f) handleFile(f); });
+      fileInput.addEventListener('change', e => { const f = e.target.files && e.target.files[0]; if(f) handleFile(f); });
+
+      async function handleFile(f){
+        if(!f) return;
+        if(f.type !== 'application/pdf'){ setStatus('Please provide a PDF file.'); return; }
+        originalFile = f;
+        setStatus('Loading PDF first page for preview…');
+        btnReset.disabled = false;
+        btnCompress.disabled = true;
+        downloadLink.style.display = 'none';
+        outImg.src = ''; outMeta.textContent = '—';
+        origImg.src = ''; origMeta.textContent = '—';
+        clearProgress();
+
+        try{
+          const reader = new FileReader();
+          reader.onload = async function(){
+            pdfData = new Uint8Array(this.result);
+            const loadingTask = pdfjsLib.getDocument({ data: pdfData });
+            const pdf = await loadingTask.promise;
+            originalFile._pdfPageCount = pdf.numPages;
+
+            const page = await pdf.getPage(1);
+            const viewport = page.getViewport({ scale: 1.2 });
+            const canvas = document.createElement('canvas');
+            canvas.width = Math.round(viewport.width);
+            canvas.height = Math.round(viewport.height);
+            const ctx = canvas.getContext('2d');
+            await page.render({ canvasContext: ctx, viewport }).promise;
+
+            setOrigPreviewFromCanvas(canvas, originalFile);
+            setStatus('Ready.'); btnCompress.disabled = false;
+          };
+          reader.readAsArrayBuffer(f);
+        }catch(err){
+          console.error(err);
+          setStatus('Failed to load preview.');
+          btnCompress.disabled = true;
+        }
+      }
+
+      const MIN_QUALITY=0.05, MAX_QUALITY=0.95, BIN_ITERS=12, MAX_PASSES=6, STOP_EPS=0.982;
+
+      async function findBestBlobForTarget(canvas, targetBytes){
+        let l=MIN_QUALITY, h=MAX_QUALITY, bestBlob=null, bestQ=MIN_QUALITY;
+        for(let i=0;i<BIN_ITERS;i++){
+          const q=(l+h)/2;
+          const blob=await canvasToBlob(canvas,"image/jpeg",q);
+          if(blob.size<=targetBytes){ bestBlob=blob; bestQ=q; l=q; } else { h=q; }
+        }
+        if(bestBlob) return { blob:bestBlob, q:bestQ, fitted:true };
+        const minBlob=await canvasToBlob(canvas,"image/jpeg",MIN_QUALITY);
+        return { blob:minBlob, q:MIN_QUALITY, fitted:false };
+      }
+
+      async function buildPdfFromBlobs(canvasList, blobList){
+        const doc = new jsPDF({ unit:"mm", format:"a4" });
+        const pageW=210, pageH=297;
+        for(let i=0;i<canvasList.length;i++){
+          const dataUrl = await blobToDataURL(blobList[i]);
+          let imgWmm=pageW, imgHmm=(canvasList[i].height/canvasList[i].width)*imgWmm;
+          if(imgHmm>pageH){ imgHmm=pageH; imgWmm=(canvasList[i].width/canvasList[i].height)*imgHmm; }
+          if(i>0) doc.addPage();
+          doc.addImage(dataUrl,"JPEG",0,0,imgWmm,imgHmm);
+        }
+        return doc.output('blob');
+      }
+
+      document.getElementById('pdf-btnCompress').addEventListener('click', async ()=>{
+        if(!pdfData) return;
+        btnCompress.disabled = true; downloadLink.style.display='none';
+        setStatus('Loading PDF pages (rendering)…'); clearProgress();
+
+        try{
+          const loadingTask = pdfjsLib.getDocument({ data: pdfData });
+          const pdf = await loadingTask.promise;
+          const numPages = pdf.numPages;
+
+          const canvasList=[];
+          for(let p=1;p<=numPages;p++){
+            setStatus(`Rendering page ${p}/${numPages}...`);
+            setProgress((p-1)/(numPages*2));
+            const page = await pdf.getPage(p);
+            const viewport = page.getViewport({ scale: 1.6 });
+            const canvas = document.createElement('canvas');
+            canvas.width = Math.round(viewport.width);
+            canvas.height = Math.round(viewport.height);
+            const ctx = canvas.getContext('2d');
+            await page.render({ canvasContext: ctx, viewport }).promise;
+            canvasList.push(canvas);
+            if(p===1){
+              // update preview with a scaled canvas
+              const previewCanvas=document.createElement('canvas');
+              const maxSide=800, sc=Math.min(1, maxSide/Math.max(canvas.width, canvas.height));
+              previewCanvas.width=Math.round(canvas.width*sc);
+              previewCanvas.height=Math.round(canvas.height*sc);
+              previewCanvas.getContext('2d').drawImage(canvas,0,0,previewCanvas.width,previewCanvas.height);
+              setOrigPreviewFromCanvas(previewCanvas, originalFile);
+            }
+          }
+
+          const netTargetBytes = getTargetBytes();
+          if(!(netTargetBytes>0)){ setStatus('Invalid target size.'); btnCompress.disabled=false; return; }
+
+          let scaleFactor=0.98, finalBlob=null, finalSize=Infinity;
+
+          for(let pass=1; pass<=MAX_PASSES; pass++){
+            setStatus(`Pass ${pass}/${MAX_PASSES} — compressing pages…`);
+            setProgress(0.25 + (pass-1)/(MAX_PASSES*2));
+            const perPageTarget=(netTargetBytes/canvasList.length)*scaleFactor;
+
+            const blobList=[]; let anyNotFitted=false;
+            for(let i=0;i<canvasList.length;i++){
+              setStatus(`Pass ${pass}: page ${i+1}/${canvasList.length}…`);
+              setProgress(0.25 + ((pass-1) + (i+1)/canvasList.length) / (MAX_PASSES*2));
+              const r=await findBestBlobForTarget(canvasList[i], perPageTarget);
+              if(!r.fitted) anyNotFitted=true;
+              blobList.push(r.blob);
+            }
+
+            setStatus(`Pass ${pass}: assembling PDF…`); setProgress(0.9);
+            const outBlob = await buildPdfFromBlobs(canvasList, blobList);
+            finalBlob = outBlob; finalSize = outBlob.size;
+
+            if(finalSize <= netTargetBytes * STOP_EPS){ break; }
+
+            if(pass===MAX_PASSES || (anyNotFitted && pass>=2)){
+              setStatus('Computing minimum-possible PDF…');
+              const minBlobList=[];
+              for(let i=0;i<canvasList.length;i++){
+                const mb=await (new Promise(res=>canvasList[i].toBlob(res,"image/jpeg",MIN_QUALITY)));
+                minBlobList.push(mb);
+              }
+              const minPdf=await buildPdfFromBlobs(canvasList, minBlobList);
+              const minSize=minPdf.size;
+              if(minSize>netTargetBytes){
+                finalBlob=minPdf; finalSize=minSize;
+                setOutPreviewFromBlob(finalBlob, canvasList[0], "compressed_min_possible.pdf");
+                const finalMB=(finalSize/1024/1024).toFixed(2);
+                setStatus(`Target too small — minimum achievable is ${finalMB} MB. Returning that file.`);
+                clearProgress(); btnCompress.disabled=false; return;
+              }else{
+                scaleFactor *= 0.9; continue;
+              }
+            }
+
+            const ratio = netTargetBytes / finalSize;
+            const damping = 0.96;
+            const newScale = Math.max(0.02, Math.min(1.0, scaleFactor * Math.max(0.5, ratio * damping)));
+            scaleFactor = (Math.abs(newScale - scaleFactor) < 0.01) ? Math.max(0.02, scaleFactor*0.9) : newScale;
+          }
+
+          setOutPreviewFromBlob(finalBlob, canvasList[0], "compressed.pdf");
+          const finalMB=(finalSize/1024/1024).toFixed(2), targetMB=Number(netTargetMB.value).toFixed(2);
+          if(finalSize<=netTargetBytes){ setStatus(`Done — final size ${finalMB} MB (target ${targetMB} MB).`); }
+          else { setStatus(`Finished — couldn't reach target. Final size ${finalMB} MB (target ${targetMB} MB). Returned best/minimum possible.`); }
+          clearProgress();
+        }catch(err){
+          console.error(err);
+          setStatus("Error: "+(err && err.message ? err.message : String(err)));
+          clearProgress();
+        }finally{
+          btnCompress.disabled=false;
+        }
+      });
+
+      document.getElementById('pdf-btnReset').addEventListener('click', ()=>{
+        pdfData=null; originalFile=null; fileInput.value='';
+        document.getElementById('pdf-origImg').src='';
+        document.getElementById('pdf-outImg').src='';
+        origMeta.textContent='—'; outMeta.textContent='—';
+        setStatus('No PDF selected.');
+        btnCompress.disabled=true; btnReset.disabled=true; downloadLink.style.display='none';
+        clearProgress(); releaseURL(outPreviewURL);
+      });
+
+      // enable reset when a file is picked
+      fileInput.addEventListener('change', ()=>{ document.getElementById('pdf-btnReset').disabled = !fileInput.files.length; });
+    })();
+
+    /* ******************************************************************
+       ===============  IMAGE COMPRESSOR (namespaced)  ==================
+       ******************************************************************/
+    (function(){
+      const $=(s)=>document.querySelector(s);
+      const fileInput=$('#img-file'),
+            dropzone=$('#img-dropzone'),
+            btnCompress=$('#img-btnCompress'),
+            btnReset=$('#img-btnReset'),
+            downloadLink=$('#img-downloadLink'),
+            statusEl=$('#img-status'),
+            progress=$('#img-progress'),
+            progressBar=$('#img-progress>div'),
+            targetKB=$('#img-targetKB'),
+            formatSel=$('#img-format'),
+            maxW=$('#img-maxW'),
+            maxH=$('#img-maxH'),
+            origImg=$('#img-origImg'),
+            outImg=$('#img-outImg'),
+            origMeta=$('#img-origMeta'),
+            outMeta=$('#img-outMeta');
+
+      let originalFile=null, originalBitmap=null, originalName='', lastObjectURL=null;
+      const bytesToKB=(b)=>(b/1024).toFixed(1);
+      function setStatus(m){statusEl.textContent=m;}
+      function setProgress(r){progress.style.display='block';progressBar.style.width=Math.max(0,Math.min(100,r*100))+'%';}
+      function clearProgress(){progress.style.display='none';progressBar.style.width='0%';}
+      function blobToDataURL(b){return new Promise(res=>{const r=new FileReader();r.onload=()=>res(r.result);r.readAsDataURL(b);});}
+      function canvasToBlob(c,t,q){return new Promise(res=>c.toBlob(res,t,q));}
+      function drawToCanvas(b,wM,hM){const{width:w,height:h}=b,ratio=Math.min(1,wM/w,hM/h),outW=Math.round(w*ratio),outH=Math.round(h*ratio),c=document.createElement('canvas');c.width=outW;c.height=outH;c.getContext('2d').drawImage(b,0,0,outW,outH);return c;}
+      async function binarySearchQuality(c,m,t,qMin=0.1,qMax=0.95){let l=qMin,h=qMax,best={blob:null,q:l};let blob=await canvasToBlob(c,m,h);if(blob.size<=t)return{blob,q:h};blob=await canvasToBlob(c,m,l);if(blob.size>t)return{blob,q:l};for(let i=0;i<16;i++){const mid=(l+h)/2,test=await canvasToBlob(c,m,mid);if(test.size<=t){best={blob:test,q:mid};l=mid;}else h=mid;}return best;}
+      async function compressToTarget(b,m,t,wM,hM){let w=Math.min(b.width,wM),h=Math.min(b.height,hM);for(let i=0;i<8;i++){setProgress(i/8);const c=drawToCanvas(b,w,h);if(m==='image/png'){let blob=await canvasToBlob(c,'image/png');if(blob.size<=t)return{blob,width:c.width,height:c.height,quality:1};}else{const{blob,q}=await binarySearchQuality(c,m,t);if(blob.size<=t)return{blob,width:c.width,height:c.height,quality:q};}w=Math.round(w*0.85);h=Math.round(h*0.85);}const fc=drawToCanvas(b,w,h),fb=await canvasToBlob(fc,m,m==='image/png'?undefined:0.1);return{blob:fb,width:fc.width,height:fc.height,quality:m==='image/png'?1:0.1};}
+      function releaseURL(u){if(u)URL.revokeObjectURL(u);}
+      function setOrigPreview(f,b){releaseURL(lastObjectURL);lastObjectURL=URL.createObjectURL(f);origImg.src=lastObjectURL;origMeta.innerHTML=`<b>${f.name}</b><br/>${b.width}×${b.height}<br/>${bytesToKB(f.size)} KB`;}
+      function setOutPreview(blob,d,q,m){releaseURL(downloadLink.href);const n=makeOutputName(originalName,m),url=URL.createObjectURL(blob);downloadLink.style.display='inline-flex';downloadLink.download=n;downloadLink.href=url;outImg.src=url;outMeta.innerHTML=`<b>${n}</b><br/>${d.w}×${d.h}<br/>Q:${m==='image/png'?'—':q.toFixed(2)}<br/><span class="${blob.size<=getTargetBytes()?'good':'bad'}">${bytesToKB(blob.size)} KB</span>`;}
+      function getTargetBytes(){return Math.max(1,Number(targetKB.value))*1024;}
+      function makeOutputName(n,m){const b=n.replace(/\.[^.]+$/,''),e=m==='image/jpeg'?'jpg':m==='image/png'?'png':'webp';return`${b}_compressed.${e}`;}
+
+      async function handleFile(f){
+        originalFile=f;originalName=f.name;btnReset.disabled=false;btnCompress.disabled=true;downloadLink.style.display='none';outImg.src='';outMeta.textContent='—';setStatus('Loading…');
+        try{
+          originalBitmap=await createImageBitmap(f);
+        }catch{
+          const d=await blobToDataURL(f),img=new Image();img.src=d;await new Promise((r,j)=>{img.onload=r;img.onerror=j});originalBitmap=await createImageBitmap(img);
+        }
+        setOrigPreview(f,originalBitmap);setStatus('Ready.');btnCompress.disabled=false;clearProgress();
+      }
+
+      dropzone.addEventListener('dragover',e=>{e.preventDefault();dropzone.classList.add('dragover');});
+      dropzone.addEventListener('dragleave',()=>dropzone.classList.remove('dragover'));
+      dropzone.addEventListener('drop',e=>{e.preventDefault();dropzone.classList.remove('dragover');const f=e.dataTransfer.files&&e.dataTransfer.files[0];if(f)handleFile(f);});
+      fileInput.addEventListener('change',e=>{const f=e.target.files&&e.target.files[0];if(f)handleFile(f);});
+
+      btnCompress.addEventListener('click',async()=>{
+        if(!originalBitmap)return;btnCompress.disabled=true;setStatus('Compressing…');
+        const m=formatSel.value,t=getTargetBytes();
+        try{
+          const{blob,width,height,quality}=await compressToTarget(originalBitmap,m,t,Number(maxW.value)||2048,Number(maxH.value)||2048);
+          setOutPreview(blob,{w:width,h:height},quality??1,m);
+          setStatus(blob.size<=t?`${bytesToKB(blob.size)} KB OK`:`Best effort: ${bytesToKB(blob.size)} KB`);
+        }catch(e){console.error(e);setStatus('Failed.');}finally{clearProgress();btnCompress.disabled=false;}
+      });
+
+      btnReset.addEventListener('click',()=>{
+        originalFile=null;originalBitmap=null;originalName='';fileInput.value='';origImg.src='';outImg.src='';origMeta.textContent='—';outMeta.textContent='—';
+        setStatus('No image selected.');btnCompress.disabled=true;btnReset.disabled=true;downloadLink.style.display='none';releaseURL(lastObjectURL);clearProgress();
+      });
+    })();
+
+    /* ******************************************************************
+       ===============  QR CODE GENERATOR (namespaced)  =================
+       ******************************************************************/
+    (function(){
+      const $ = s => document.querySelector(s);
+      const qrText   = $('#qr-text');
+      const sizeIn   = $('#qr-size');
+      const eccIn    = $('#qr-ecc');
+      const quietIn  = $('#qr-quiet');
+      const shapeIn  = $('#qr-shape');
+      const fgIn     = $('#qr-fg');
+      const bgIn     = $('#qr-bg');
+      const btnGen   = $('#qr-btnGenerate');
+      const btnClr   = $('#qr-btnClear');
+      const btnDl    = $('#qr-btnDownload');
+      const statusEl = $('#qr-status');
+      const progress = $('#qr-progress');
+      const bar      = $('#qr-progress > div');
+      const qrCanvas = $('#qr-canvas');
+      const qrMeta   = $('#qr-meta');
+
+      const ECC = { L: QRCode.CorrectLevel.L, M: QRCode.CorrectLevel.M, Q: QRCode.CorrectLevel.Q, H: QRCode.CorrectLevel.H };
+
+      function setStatus(m){ statusEl.textContent = m; }
+      function setProgress(r){ progress.style.display='block'; bar.style.width = Math.max(0,Math.min(100,r*100)) + '%'; }
+      function clearProgress(){ progress.style.display='none'; bar.style.width='0%'; }
+
+      function drawRoundedModule(ctx, cx, cy, w, h, r) {
+        const rr = Math.min(r, w/2, h/2);
+        ctx.beginPath();
+        ctx.moveTo(cx + rr, cy);
+        ctx.arcTo(cx + w, cy,     cx + w, cy + h, rr);
+        ctx.arcTo(cx + w, cy + h, cx,     cy + h, rr);
+        ctx.arcTo(cx,     cy + h, cx,     cy,     rr);
+        ctx.arcTo(cx,     cy,     cx + w, cy,     rr);
+        ctx.closePath();
+        ctx.fill();
+      }
+
+      function makeQRCodeData(text, correctLevel) {
+        const tmp = document.createElement('div');
+        const qr = new QRCode(tmp, { text: text || ' ', width: 256, height: 256, correctLevel });
+        const model = qr._oQRCode;
+        tmp.remove();
+        return model;
+      }
+
+      async function generate() {
+        const text   = qrText.value.trim();
+        const size   = Math.max(64, Number(sizeIn.value) || 512);
+        const quiet  = Math.max(0, Number(quietIn.value) || 0);
+        const ecc    = ECC[eccIn.value] || ECC.M;
+        const shape  = shapeIn.value;
+        const fg     = fgIn.value || '#ffffff';
+        const bg     = bgIn.value || '#0a0a0a';
+
+        if (!text) { setStatus('Please enter some text.'); return; }
+
+        setStatus('Generating…'); setProgress(0.2);
+
+        let model;
+        try { model = makeQRCodeData(text, ecc); }
+        catch { setStatus('Failed to encode.'); clearProgress(); return; }
+
+        const modules    = model.getModuleCount();
+        const canvasSize = size + quiet*2;
+        const cellSize   = size / modules;
+
+        qrCanvas.width  = canvasSize;
+        qrCanvas.height = canvasSize;
+        const ctx = qrCanvas.getContext('2d');
+
+        ctx.fillStyle = bg;
+        ctx.fillRect(0, 0, canvasSize, canvasSize);
+
+        ctx.translate(quiet, quiet);
+        ctx.fillStyle = fg;
+
+        const rounding = shape === 'round' ? Math.max(0.001, cellSize * 0.35) : 0;
+        for (let r = 0; r < modules; r++) {
+          for (let c = 0; c < modules; c++) {
+            if (model.isDark(r, c)) {
+              const x = Math.round(c * cellSize);
+              const y = Math.round(r * cellSize);
+              const w = Math.ceil((c+1)*cellSize) - Math.floor(c*cellSize);
+              const h = Math.ceil((r+1)*cellSize) - Math.floor(r*cellSize);
+              if (rounding > 0) drawRoundedModule(ctx, x, y, w, h, rounding);
+              else ctx.fillRect(x, y, w, h);
+            }
+          }
+        }
+        ctx.setTransform(1,0,0,1,0,0);
+
+        setProgress(0.8);
+
+        qrCanvas.toBlob(blob => {
+          const url = URL.createObjectURL(blob);
+          btnDl.style.display = 'inline-flex';
+          btnDl.href = url;
+          btnDl.download = 'qr.png';
+        }, 'image/png');
+
+        qrMeta.innerHTML = `<b>Matrix:</b> ${modules}×${modules} · <b>ECC:</b> ${eccIn.value}<br><b>Size:</b> ${canvasSize}px`;
+
+        setProgress(1); setStatus('Done.'); setTimeout(clearProgress, 250);
+      }
+
+      btnGen.addEventListener('click', generate);
+      btnClr.addEventListener('click', () => { qrText.value=''; setStatus('Cleared.'); });
+      qrText.addEventListener('input', () => { clearTimeout(window.__qr_t); window.__qr_t = setTimeout(() => { if(qrText.value.trim()) generate(); }, 300); });
+      [sizeIn, eccIn, quietIn, shapeIn, fgIn, bgIn].forEach(el => el.addEventListener('change', generate));
+
+      // Auto-generate when user opens this section
+      window.addEventListener('hashchange', ()=>{ if(location.hash==="#qr") generate(); });
+      if(location.hash==="#qr") generate(); // on first load if deep-linked
+    })();
+  </script>
+</body>
+</html>
