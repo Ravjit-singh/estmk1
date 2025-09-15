@@ -1,4 +1,4 @@
-const CACHE_NAME = "r-music-cache-v1";
+const CACHE_NAME = "estmk1-cache-v1";
 const urlsToCache = [
   "./",
   "./index.html",
